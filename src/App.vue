@@ -17,6 +17,8 @@ const animation = new LotteryAnimation()
 const { drawnNumbers } = lottery.getStatus()
 const stepIndex = ref(1)
 
+const recoverNums = reactive([])
+
 const getSliceArray = (start, end, count) => {
 	const arr = drawnNumbers.slice(start, end)
 	if (arr.length) {
@@ -111,24 +113,27 @@ const handleStop = (step) => {
 	})
 }
 
-const handleRestart = (step, index: number) => {
+const handleRestart = (step, index: number, num: number) => {
 	animation.start(1, ([nums]) => {
 		step.displayNumbers[index] = nums
+	})
+
+	recoverNums.push({
+		step: step.step,
+		index,
+		num,
 	})
 }
 
 const handleRestop = (step, index: number) => {
 	const indexSort = steps.reduce((acc, cur) => {
 		if (cur.step < step.step) {
-			const count = steps[stepIndex.value - 1].count
-			return acc + count + index
-		} else if (cur.step === step.step) {
-			return acc + index
+			const count = steps[cur.step - 1].count
+			return acc + count
 		}
 		return acc
 	}, 0)
-
-	const drawnNumbers = lottery.redraw(indexSort, 1)
+	const drawnNumbers = lottery.redraw(indexSort + index, 1)
 	animation.stop(drawnNumbers, ([nums]) => {
 		step.displayNumbers[index] = nums
 	})
@@ -208,8 +213,14 @@ const handleNext = (fn) => {
 								class="text-7xl font-mono bg-red-600/90 text-yellow-300 rounded-2xl text-center shadow-lg transform transition-all duration-300 hover:scale-105 grid place-content-center p-2">
 								<div
 									class="flex justify-end"
-									v-if="stepIndex < steps.length && !step.readonly">
-									<Button variant="link" @click="handleRestart(step, index)">
+									v-if="
+										stepIndex < steps.length &&
+										!step.readonly &&
+										step.status === 2
+									">
+									<Button
+										variant="link"
+										@click="handleRestart(step, index, num)">
 										重新抽奖
 									</Button>
 									<Button variant="link" @click="handleRestop(step, index)">
@@ -241,6 +252,11 @@ const handleNext = (fn) => {
 				</template>
 			</template>
 			<div class="flex place-content-end gap-4">
+				<p
+					v-if="recoverNums.length"
+					class="text-sm text-gray-500 flex items-center">
+					已重新抽奖号码：{{ recoverNums.map((item) => item.num).toString() }}
+				</p>
 				<Button
 					:disabled="stepIndex === 1 || steps[stepIndex - 1].status !== 2"
 					variant="outline"

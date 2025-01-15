@@ -33,16 +33,27 @@ export class LotteryPool {
 			}
 		}
 
+		this.pool = this.shuffleArray(this.pool)
+
 		this.saveToStorage()
 		return result
 	}
 
 	reset() {
-		this.pool = Array.from({ length: 75 }, (_, i) =>
-			String(i + 1).padStart(3, '0')
+		// 先创建有序数组，然后打乱
+		this.pool = this.shuffleArray(
+			Array.from({ length: 75 }, (_, i) => String(i + 1).padStart(3, '0'))
 		)
 		this.drawnNumbers = []
 		this.saveToStorage()
+	}
+
+	private shuffleArray(array: string[]): string[] {
+		for (let i = array.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1))
+			;[array[i], array[j]] = [array[j], array[i]]
+		}
+		return array
 	}
 
 	private saveToStorage() {
@@ -60,7 +71,6 @@ export class LotteryPool {
 	}
 
 	redraw(startIndex: number, count: number): string[] {
-		console.log('startIndex :>> ', startIndex)
 		// 直接从当前池中抽取新数字
 		const result = this.draw(count)
 
