@@ -18,11 +18,19 @@ const { drawnNumbers } = lottery.getStatus()
 const stepIndex = ref(1)
 
 const getSliceArray = (start, end, count) => {
-	const arr = drawnNumbers.slice(0, 10)
+	const arr = drawnNumbers.slice(start, end)
 	if (arr.length) {
-		return arr
+		if (arr.length === count) {
+			return arr
+		} else {
+			return arr.concat(Array(count - arr.length).fill("000"))
+		}
 	}
 	return Array(count).fill("000")
+}
+
+const getStatus = (start, end, count) => {
+	return getSliceArray(start, end, count).every((num) => num !== "000") ? 2 : 1
 }
 
 const steps = reactive([
@@ -31,42 +39,49 @@ const steps = reactive([
 		count: 10,
 		title: "阳光普照",
 		displayNumbers: getSliceArray(0, 10, 10),
+		status: getStatus(0, 10, 10),
 	},
 	{
 		step: 2,
 		count: 10,
 		title: "三等奖",
 		displayNumbers: getSliceArray(10, 20, 10),
+		status: getStatus(10, 20, 10),
 	},
 	{
 		step: 3,
 		count: 10,
 		title: "阳光普照",
 		displayNumbers: getSliceArray(20, 30, 10),
+		status: getStatus(20, 30, 10),
 	},
 	{
 		step: 4,
 		count: 5,
 		title: "二等奖",
 		displayNumbers: getSliceArray(30, 35, 5),
+		status: getStatus(30, 35, 5),
 	},
 	{
 		step: 5,
 		count: 10,
 		title: "阳光普照",
 		displayNumbers: getSliceArray(35, 45, 10),
+		status: getStatus(35, 45, 10),
 	},
 	{
 		step: 6,
 		count: 2,
 		title: "一等奖",
 		displayNumbers: getSliceArray(45, 47, 2),
+		status: getStatus(45, 47, 2),
 	},
 	{
 		step: 7,
 		count: 10,
 		title: "阳光普照",
 		displayNumbers: drawnNumbers.remainingNumbers || Array(10).fill("000"),
+		status: 2,
 	},
 ])
 
@@ -205,7 +220,11 @@ const handleNext = (fn) => {
 			</template>
 			<div class="flex place-content-end gap-4">
 				<Button
-					:disabled="stepIndex === 1 || steps[stepIndex - 1].status !== 2"
+					:disabled="
+						stepIndex === 1 ||
+						steps[stepIndex - 1].status !== 2 ||
+						stepIndex === steps.length
+					"
 					variant="outline"
 					size="lg"
 					@click="prevStep()">
