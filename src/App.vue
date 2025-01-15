@@ -189,15 +189,16 @@ const handleNext = (fn) => {
 			</template>
 			<div class="flex place-content-end gap-4">
 				<Button
-					:disabled="stepIndex === 1"
+					:disabled="stepIndex === 1 || steps[stepIndex - 1].status !== 2"
 					variant="outline"
 					size="lg"
 					@click="prevStep()">
-					返回
+					查看上一轮抽奖结果
 				</Button>
 
 				<Button
 					v-show="stepIndex <= steps.length - 1"
+					:disabled="steps[stepIndex - 1].status !== 2"
 					size="lg"
 					@click="handleNext(nextStep)">
 					下一轮抽奖
