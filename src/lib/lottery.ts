@@ -28,7 +28,9 @@ export class LotteryPool {
 			const index = Math.floor(Math.random() * this.pool.length)
 			const number = this.pool.splice(index, 1)[0]
 			result.push(number)
-			this.drawnNumbers.push(number)
+			if (count > 1) {
+				this.drawnNumbers.push(number)
+			}
 		}
 
 		this.saveToStorage()
@@ -55,6 +57,18 @@ export class LotteryPool {
 			remainingNumbers: [...this.pool],
 			drawnNumbers: [...this.drawnNumbers],
 		}
+	}
+
+	redraw(startIndex: number, count: number): string[] {
+		console.log('startIndex :>> ', startIndex)
+		// 直接从当前池中抽取新数字
+		const result = this.draw(count)
+
+		// 更新已抽取数组中的指定位置
+		this.drawnNumbers.splice(startIndex, count, ...result)
+
+		this.saveToStorage()
+		return result
 	}
 }
 

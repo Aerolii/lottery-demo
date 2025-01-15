@@ -33,6 +33,10 @@ const getStatus = (start, end, count) => {
 	return getSliceArray(start, end, count).every((num) => num !== "000") ? 2 : 1
 }
 
+const getReadonly = (start, end, count) => {
+	return getSliceArray(start, end, count).every((num) => num !== "000")
+}
+
 const steps = reactive([
 	{
 		step: 1,
@@ -40,6 +44,7 @@ const steps = reactive([
 		title: "阳光普照",
 		displayNumbers: getSliceArray(0, 10, 10),
 		status: getStatus(0, 10, 10),
+		readonly: getReadonly(0, 10, 10),
 	},
 	{
 		step: 2,
@@ -47,6 +52,7 @@ const steps = reactive([
 		title: "三等奖",
 		displayNumbers: getSliceArray(10, 20, 10),
 		status: getStatus(10, 20, 10),
+		readonly: getReadonly(10, 20, 10),
 	},
 	{
 		step: 3,
@@ -54,6 +60,7 @@ const steps = reactive([
 		title: "阳光普照",
 		displayNumbers: getSliceArray(20, 30, 10),
 		status: getStatus(20, 30, 10),
+		readonly: getReadonly(20, 30, 10),
 	},
 	{
 		step: 4,
@@ -61,6 +68,7 @@ const steps = reactive([
 		title: "二等奖",
 		displayNumbers: getSliceArray(30, 35, 5),
 		status: getStatus(30, 35, 5),
+		readonly: getReadonly(30, 35, 5),
 	},
 	{
 		step: 5,
@@ -68,6 +76,7 @@ const steps = reactive([
 		title: "阳光普照",
 		displayNumbers: getSliceArray(35, 45, 10),
 		status: getStatus(35, 45, 10),
+		readonly: getReadonly(35, 45, 10),
 	},
 	{
 		step: 6,
@@ -75,6 +84,7 @@ const steps = reactive([
 		title: "一等奖",
 		displayNumbers: getSliceArray(45, 47, 2),
 		status: getStatus(45, 47, 2),
+		readonly: getReadonly(45, 47, 2),
 	},
 	{
 		step: 7,
@@ -82,6 +92,7 @@ const steps = reactive([
 		title: "阳光普照",
 		displayNumbers: drawnNumbers.remainingNumbers || Array(10).fill("000"),
 		status: 2,
+		readonly: true,
 	},
 ])
 
@@ -107,7 +118,17 @@ const handleRestart = (step, index: number) => {
 }
 
 const handleRestop = (step, index: number) => {
-	const drawnNumbers = lottery.draw(1)
+	const indexSort = steps.reduce((acc, cur) => {
+		if (cur.step < step.step) {
+			const count = steps[stepIndex.value - 1].count
+			return acc + count + index
+		} else if (cur.step === step.step) {
+			return acc + index
+		}
+		return acc
+	}, 0)
+
+	const drawnNumbers = lottery.redraw(indexSort, 1)
 	animation.stop(drawnNumbers, ([nums]) => {
 		step.displayNumbers[index] = nums
 	})
@@ -149,6 +170,7 @@ const handleNext = (fn) => {
 
 					<StepperTrigger as-child>
 						<Button
+							disabled
 							:variant="
 								state === 'completed' || state === 'active'
 									? 'default'
@@ -220,11 +242,7 @@ const handleNext = (fn) => {
 			</template>
 			<div class="flex place-content-end gap-4">
 				<Button
-					:disabled="
-						stepIndex === 1 ||
-						steps[stepIndex - 1].status !== 2 ||
-						stepIndex === steps.length
-					"
+					:disabled="stepIndex === 1 || steps[stepIndex - 1].status !== 2"
 					variant="outline"
 					size="lg"
 					@click="prevStep()">
