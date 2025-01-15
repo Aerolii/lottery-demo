@@ -14,43 +14,59 @@ import {
 const lottery = new LotteryPool()
 const animation = new LotteryAnimation()
 
-const displayNumbers = ref<string[]>(Array(10).fill("000"))
-const count = ref(10)
-
+const { drawnNumbers } = lottery.getStatus()
 const stepIndex = ref(1)
+
+const getSliceArray = (start, end, count) => {
+	const arr = drawnNumbers.slice(0, 10)
+	if (arr.length) {
+		return arr
+	}
+	return Array(count).fill("000")
+}
 
 const steps = reactive([
 	{
 		step: 1,
 		count: 10,
 		title: "阳光普照",
-		displayNumbers: Array(10).fill("000"),
+		displayNumbers: getSliceArray(0, 10, 10),
 	},
 	{
 		step: 2,
 		count: 10,
 		title: "三等奖",
-		displayNumbers: Array(10).fill("000"),
+		displayNumbers: getSliceArray(10, 20, 10),
 	},
 	{
 		step: 3,
 		count: 10,
 		title: "阳光普照",
-		displayNumbers: Array(10).fill("000"),
+		displayNumbers: getSliceArray(20, 30, 10),
 	},
-	{ step: 4, count: 5, title: "二等奖", displayNumbers: Array(5).fill("000") },
+	{
+		step: 4,
+		count: 5,
+		title: "二等奖",
+		displayNumbers: getSliceArray(30, 35, 5),
+	},
 	{
 		step: 5,
 		count: 10,
 		title: "阳光普照",
-		displayNumbers: Array(10).fill("000"),
+		displayNumbers: getSliceArray(35, 45, 10),
 	},
-	{ step: 6, count: 2, title: "一等奖", displayNumbers: Array(2).fill("000") },
+	{
+		step: 6,
+		count: 2,
+		title: "一等奖",
+		displayNumbers: getSliceArray(45, 47, 2),
+	},
 	{
 		step: 7,
 		count: 10,
 		title: "阳光普照",
-		displayNumbers: Array(10).fill("000"),
+		displayNumbers: drawnNumbers.remainingNumbers || Array(10).fill("000"),
 	},
 ])
 
