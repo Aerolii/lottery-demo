@@ -16,24 +16,35 @@ export class LotteryPool {
 		}
 	}
 
+	// Box-Muller 变换生成正态分布随机数
+	private normalRandom(mean: number, stdDev: number): number {
+		const u1 = Math.random()
+		const u2 = Math.random()
+		const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+		return mean + stdDev * z
+	}
+
+	// 改进的抽取算法
 	draw(count: number): string[] {
 		if (this.pool.length === 0) {
 			this.reset()
 		}
 
-		const drawCount = Math.min(count, this.pool.length)
-		const result: string[] = []
+		this.pool = this.shuffleArray(this.pool)
 
-		for (let i = 0; i < drawCount; i++) {
-			const index = Math.floor(Math.random() * this.pool.length)
+		const result: string[] = []
+		const poolSize = this.pool.length
+
+		for (let i = 0; i < count; i++) {
+			// 使用正态分布生成索引，确保更均匀的分布
+			const normalIndex = Math.abs(
+				this.normalRandom(poolSize / 2, poolSize / 6)
+			)
+			const index = Math.min(Math.floor(normalIndex), this.pool.length - 1)
 			const number = this.pool.splice(index, 1)[0]
 			result.push(number)
-			if (count > 1) {
-				this.drawnNumbers.push(number)
-			}
+			this.drawnNumbers.push(number)
 		}
-
-		this.pool = this.shuffleArray(this.pool)
 
 		this.saveToStorage()
 		return result
@@ -48,12 +59,17 @@ export class LotteryPool {
 		this.saveToStorage()
 	}
 
+	// Fisher-Yates 洗牌算法
 	private shuffleArray(array: string[]): string[] {
-		for (let i = array.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1))
-			;[array[i], array[j]] = [array[j], array[i]]
+		const shuffled = [...array]
+		for (let i = shuffled.length - 1; i > 0; i--) {
+			// 使用 crypto API 生成更随机的数
+			const array = new Uint32Array(1)
+			window.crypto.getRandomValues(array)
+			const j = array[0] % (i + 1)
+			;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
 		}
-		return array
+		return shuffled
 	}
 
 	private saveToStorage() {
@@ -61,7 +77,12 @@ export class LotteryPool {
 		sessionStorage.setItem(this.DRAWN_KEY, JSON.stringify(this.drawnNumbers))
 	}
 
-	getStatus() {
+	getStatus(): {
+		remainingCount: number
+		drawnCount: number
+		remainingNumbers: string[]
+		drawnNumbers: string[]
+	} {
 		return {
 			remainingCount: this.pool.length,
 			drawnCount: this.drawnNumbers.length,

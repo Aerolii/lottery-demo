@@ -14,10 +14,15 @@ import {
 const lottery = new LotteryPool()
 const animation = new LotteryAnimation()
 
-const { drawnNumbers } = lottery.getStatus()
+const { drawnNumbers, remainingNumbers } = lottery.getStatus()
 const stepIndex = ref(1)
 
-const recoverNums = reactive([])
+interface RecoverNum {
+	step: number
+	index: number
+	num: number
+}
+const recoverNums = reactive<RecoverNum[]>([])
 
 const getSliceArray = (start, end, count) => {
 	const arr = drawnNumbers.slice(start, end)
@@ -31,11 +36,11 @@ const getSliceArray = (start, end, count) => {
 	return Array(count).fill("000")
 }
 
-const getStatus = (start, end, count) => {
+const getStatus = (start: number, end: number, count: number) => {
 	return getSliceArray(start, end, count).every((num) => num !== "000") ? 2 : 1
 }
 
-const getReadonly = (start, end, count) => {
+const getReadonly = (start: number, end: number, count: number) => {
 	return getSliceArray(start, end, count).every((num) => num !== "000")
 }
 
@@ -92,7 +97,7 @@ const steps = reactive([
 		step: 7,
 		count: 10,
 		title: "阳光普照",
-		displayNumbers: drawnNumbers.remainingNumbers || Array(10).fill("000"),
+		displayNumbers: remainingNumbers || Array(10).fill("000"),
 		status: 2,
 		readonly: true,
 	},
@@ -141,8 +146,7 @@ const handleRestop = (step, index: number) => {
 
 const handleNext = (fn) => {
 	if (stepIndex.value === steps.length - 1) {
-		const len = lottery.pool.length
-		steps[stepIndex.value].displayNumbers = lottery.pool
+		steps[stepIndex.value].displayNumbers = lottery.getStatus().remainingNumbers
 	}
 
 	const prevStep = steps[stepIndex.value - 1]
@@ -185,7 +189,7 @@ const handleNext = (fn) => {
 							class="z-10 rounded-full shrink-0"
 							:class="[
 								state === 'active' &&
-									'ring-2 ring-ring ring-offset-2 ring-offset-background',
+									'ring-2 ring-ring ring-offset-2 ring-offset-background bg-amber-600',
 							]">
 							<Check v-if="state === 'completed'" class="size-5" />
 							<Circle v-if="state === 'active'" />
